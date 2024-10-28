@@ -1,0 +1,80 @@
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_wine
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, ConfusionMatrixDisplay
+
+# Load the Wine dataset
+wine = load_wine()
+X = wine.data  # Features
+y = wine.target  # Class labels
+
+# Convert dataset to a DataFrame for better handling
+df = pd.DataFrame(X, columns=wine.feature_names)
+df['target'] = y
+
+# Split the data into training and testing sets (70% training, 30% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+
+# Standardize the data
+scaler = StandardScaler()
+X_train_std = scaler.fit_transform(X_train)
+X_test_std = scaler.transform(X_test)
+
+# Train an LDA Model
+lda = LinearDiscriminantAnalysis()
+lda.fit(X_train_std, y_train)
+
+# Evaluate the LDA Model
+y_pred_lda = lda.predict(X_test_std)
+accuracy_lda = accuracy_score(y_test, y_pred_lda)
+precision_lda = precision_score(y_test, y_pred_lda, average='weighted')
+recall_lda = recall_score(y_test, y_pred_lda, average='weighted')
+conf_matrix_lda = confusion_matrix(y_test, y_pred_lda)
+
+print("LDA Classifier Performance:")
+print("Accuracy:", accuracy_lda)
+print("Precision:", precision_lda)
+print("Recall:", recall_lda)
+ConfusionMatrixDisplay(conf_matrix_lda, display_labels=wine.target_names).plot()
+plt.title('LDA Confusion Matrix')
+plt.show()
+
+# Train a Logistic Regression Model
+logreg = LogisticRegression(max_iter=200, random_state=42)
+logreg.fit(X_train_std, y_train)
+
+# Evaluate the Logistic Regression Model
+y_pred_logreg = logreg.predict(X_test_std)
+accuracy_logreg = accuracy_score(y_test, y_pred_logreg)
+precision_logreg = precision_score(y_test, y_pred_logreg, average='weighted')
+recall_logreg = recall_score(y_test, y_pred_logreg, average='weighted')
+conf_matrix_logreg = confusion_matrix(y_test, y_pred_logreg)
+
+print("Logistic Regression Classifier Performance:")
+print("Accuracy:", accuracy_logreg)
+print("Precision:", precision_logreg)
+print("Recall:", recall_logreg)
+ConfusionMatrixDisplay(conf_matrix_logreg, display_labels=wine.target_names).plot()
+plt.title('Logistic Regression Confusion Matrix')
+plt.show()
+
+# Visualize Decision Boundaries (Optional)
+# Reduce dataset to 2 dimensions using LDA for visualization
+X_train_lda = lda.transform(X_train_std)
+X_test_lda = lda.transform(X_test_std)
+
+# Plot decision boundaries for LDA
+plt.figure(figsize=(10, 5))
+for i, color, label in zip([0, 1, 2], ['r', 'g', 'b'], wine.target_names):
+    plt.scatter(X_train_lda[y_train == i, 0], X_train_lda[y_train == i, 1], color=color, label=label, alpha=0.7, edgecolors='k')
+plt.xlabel('LDA Component 1')
+plt.ylabel('LDA Component 2')
+plt.title('LDA Decision Boundaries on Wine Dataset')
+plt.legend()
+plt.show()
